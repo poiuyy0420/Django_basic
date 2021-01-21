@@ -14,6 +14,30 @@ def send_slack(msg):
         }, headers={ 'Content-Type': 'application/json' })
 
 
+@api.route('/todos/done', methods=['PUT'])
+def todos_done():
+    userid = session.get('userid', 1)
+    if not userid:
+        return jsonify(), 401
+
+    data = request.get_json()
+    todo_id = data.get('todo_id')
+
+    todo = Todo.query.filter_by(id=todo_id).first()
+    fcuser = Fcuser.query.filter_by(userid=userid).first()
+
+    if todo.fcuser_id != fcuser.id:
+        return jsonify(), 400
+
+    todo.status = 1
+
+    db.session.commit()
+
+    return jsonify()
+
+
+
+
 @api.route('/todos', methods=['GET', 'POST', 'DELETE'])
 def todos():
 
@@ -25,7 +49,12 @@ def todos():
         data = request.get_json()
         todo = Todo()
         todo.title = data.get('title')
-        todo.fcuser_id = userid
+
+        fcuser = Fcuser.query.filter_by(userid=userid).first()
+        todo.fcuser_id = fcuser.id
+
+        todo.due = data.get('due')
+        todo.status = 0
 
         db.session.add(todo)
         db.session.commit()
