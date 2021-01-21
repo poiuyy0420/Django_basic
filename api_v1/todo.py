@@ -16,7 +16,7 @@ def send_slack(msg):
 
 @api.route('/todos/done', methods=['PUT'])
 def todos_done():
-    userid = session.get('userid', 1)
+    userid = session.get('userid', None)
     if not userid:
         return jsonify(), 401
 
